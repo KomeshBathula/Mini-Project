@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tourist Safety Tracker</title>
+</head>
+<body>
+    <h1>Tourist Safety Tracker Demo</h1>
+
+    <h3>Live Location Check</h3>
+    <input type="number" id="lat" placeholder="Latitude" step="0.0001">
+    <input type="number" id="lon" placeholder="Longitude" step="0.0001">
+    <button onclick="checkLocation()">Check Risk</button>
+
+    <p id="status"></p>
+
+    <hr>
+    <h3>Simulate Movement</h3>
+    <button onclick="startSimulation()">Start Simulation</button>
+
+    <p id="sim_status"></p>
+
+    <script>
+    // Check manual location
+    function checkLocation(){
+        var lat = document.getElementById("lat").value;
+        var lon = document.getElementById("lon").value;
+
+        fetch(`/current_location?lat=${lat}&lon=${lon}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("status").innerHTML = 
+                `Current Risk Status: <b>${data.risk_status}</b>`;
+            if(data.risk_status == "HIGH_RISK"){
+                alert("⚠ ALERT! Tourist is in HIGH RISK ZONE!");
+            }
+        });
+    }
+
+    // Simulation path (Ameoba-shaped points)
+    let path = [
+        {lat: 30.7355, lon: 79.0648},
+        {lat: 30.7357, lon: 79.0650},
+        {lat: 30.7360, lon: 79.0655},
+        {lat: 30.7362, lon: 79.0658},
+        {lat: 30.7361, lon: 79.0657}
+    ];
+
+    let sim_index = 0;
+    let sim_interval;
+
+    function startSimulation(){
+        sim_interval = setInterval(() => {
+            if(sim_index >= path.length) sim_index = 0;
+            let point = path[sim_index];
+            fetch(`/current_location?lat=${point.lat}&lon=${point.lon}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("sim_status").innerHTML = 
+                    `Simulated Location Risk: <b>${data.risk_status}</b>`;
+                if(data.risk_status == "HIGH_RISK"){
+                    alert("⚠ ALERT! Tourist is in HIGH RISK ZONE!");
+                }
+            });
+            sim_index++;
+        }, 3000); // every 3 seconds
+    }
+    </script>
+</body>
+</html>
